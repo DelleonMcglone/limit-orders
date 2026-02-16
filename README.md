@@ -1,66 +1,62 @@
-## Foundry
+# Take-Profit Limit Orders Hook
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A Uniswap V4 hook that implements on-chain take-profit limit orders. Users can place orders to automatically sell tokens when the price reaches a target level, with execution happening atomically inside `afterSwap`.
 
-Foundry consists of:
+## How It Works
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+### Placing Orders
 
-## Documentation
+Users place limit orders by specifying a pool, a tick (price level), a direction (`zeroForOne` or `oneForZero`), and an input amount. The hook holds the input tokens and mints ERC-1155 claim tokens representing the user's position.
 
-https://book.getfoundry.sh/
+### Order Execution
+
+When a swap occurs in the pool, the `afterSwap` hook checks if the tick has shifted past any pending order levels:
+
+- **Tick increases** (Token 0 price rises) — executes `zeroForOne` sell orders within the new tick range
+- **Tick decreases** (Token 1 price rises) — executes `oneForZero` sell orders within the new tick range
+
+Each order execution itself shifts the tick further, so the hook re-evaluates the tick range after every fill. This prevents orders from being incorrectly executed when prior fills have already moved the price back.
+
+### Redeeming
+
+After an order is filled, holders of the corresponding ERC-1155 claim tokens can redeem their proportional share of the output tokens.
+
+### Cancelling
+
+Users can cancel unfilled orders at any time to reclaim their input tokens.
+
+## Key Design Decisions
+
+- **Re-entrancy guard**: `afterSwap` short-circuits when `sender` is the hook itself, preventing recursive execution loops
+- **Tick-aware fulfillment**: Orders are filled one at a time with tick re-evaluation between each, so a fill that moves the price back won't incorrectly trigger further orders
+- **Aggregated positions**: Multiple users placing the same order (same pool, tick, direction) are batched into a single swap for gas efficiency
+
+## Project Structure
+
+```
+src/
+  TakeProfitsHook.sol   # The hook contract
+test/
+  TakeProfitsHook.t.sol # Test suite
+```
 
 ## Usage
 
 ### Build
 
 ```shell
-$ forge build
+forge build
 ```
 
 ### Test
 
 ```shell
-$ forge test
+forge test
 ```
 
-### Format
+## Dependencies
 
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- [Uniswap V4 Core](https://github.com/Uniswap/v4-core)
+- [Uniswap V4 Periphery](https://github.com/Uniswap/v4-periphery)
+- [OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts) (ERC-1155)
+- [Solmate](https://github.com/transmissions11/solmate) (FixedPointMathLib)
