@@ -34,7 +34,7 @@ script/
 |----------|---------|----------|
 | PoolManager | `0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408` | [Verified](https://sepolia.basescan.org/address/0x05E73354cFDd6745C338b50BcFDfA3Aa6fA03408#code) |
 | USDC | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | [Verified](https://sepolia.basescan.org/address/0x036CbD53842c5426634e7929541eC2318f3dCF7e#code) |
-| **AsyncLimitOrder** | pending deployment | — |
+| **AsyncLimitOrder** | `0xb9E29F39bbf01c9D0FF6F1c72859F0eF550fD0c8` | [Verified](https://sepolia.basescan.org/address/0xb9E29F39bbf01c9D0FF6F1c72859F0eF550fD0c8#code) |
 
 ## Hook Flags
 
